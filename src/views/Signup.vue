@@ -105,6 +105,7 @@ export default {
         .catch(function (error) {
           console.log("Doslo je do pogreske", error);
         });
+      console.log("Nastavak");
     },
   },
 };

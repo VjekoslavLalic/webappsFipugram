@@ -22,14 +22,14 @@
       </button>
       <div class="navbar-collapse" id="navbarToggler">
         <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-          <li class="nav-item">
-            <router-link to="/" class="nav-link">Home</router-link>
-          </li>
-          <li class="nav-item">
+          <li v-if="!store.currentUser" class="nav-item">
             <router-link to="/login" class="nav-link">Login</router-link>
           </li>
-          <li class="nav-item">
+          <li v-if="!store.currentUser" class="nav-item">
             <router-link to="/signup" class="nav-link">Signup</router-link>
+          </li>
+          <li v-if="store.currentUser" class="nav-item">
+            <a href="#" @click.prevent="logout()" class="nav-link">Logout</a>
           </li>
         </ul>
         <form class="form-inline my-2 my-lg-0">
@@ -51,12 +51,41 @@
 </template>
 <script>
 import store from "@/store";
+import { firebase } from "@/firebase";
+import router from "@/router";
+//import { Firestore } from "@firebase/firestore";
+
+firebase.auth().onAuthStateChanged((user) => {
+  const currentRoute = router.currentRoute;
+  if (user) {
+    console.log("****", user.email);
+    store.currentUser = user.email;
+    if (!currentRoute.meta.needsUser) {
+      router.push({ name: "Home" });
+    }
+  } else {
+    console.log("**** No user");
+    store.currentUser = null;
+    if (currentRoute.meta.needsUser) {
+      router.push({ name: "Login" });
+    }
+  }
+});
+
 export default {
   name: "app",
   data() {
     return {
       store: store,
     };
+  },
+  methods: {
+    logout() {
+      firebase.auth().signOut();
+      //.then(() => {
+      //this.$router.push({ name: "Login" });
+      //});
+    },
   },
 };
 </script>
