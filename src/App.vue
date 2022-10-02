@@ -83,7 +83,7 @@ export default {
     logout() {
       firebase.auth().signOut();
       //.then(() => {
-      //this.$router.push({ name: "Login" });
+      //this.$router.push(  { name: "Login" });
       //});
     },
   },

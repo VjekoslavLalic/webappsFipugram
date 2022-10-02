@@ -23,12 +23,18 @@
             id="imageDescription"
           />
         </div>
-        <button type="submit" class="btn btn-primary ml-2">Post image</button>
+        <button
+          type="button"
+          @click="postNewImage()"
+          class="btn btn-primary ml-2"
+        >
+          Post image
+        </button>
       </form>
 
       <instagram-card
         v-for="card in filteredCards"
-        :key="card.url"
+        :key="card.id"
         :info="card"
       />
     </div>
@@ -42,8 +48,8 @@
 import InstagramCard from "@/components/InstagramCard.vue";
 import store from "@/store";
 import { db } from "@/firebase";
-let cards;
 
+/*
 cards = [
   {
     url: "https://picsum.photos/id/1/400/400",
@@ -61,28 +67,65 @@ cards = [
     time: "few minutes ago",
   },
 ];
-
+*/
 export default {
   name: "Home",
   data: function () {
     return {
-      cards: cards,
+      cards: [],
       store: store,
       newImageDescription: "",
       newImageUrl: "",
     };
   },
+  mounted() {
+    this.getPosts();
+  },
   methods: {
+    getPosts() {
+      console.log("Firebase dohvat...");
+
+      db.collection("posts")
+        .orderBy("posted_at", "desc")
+        .limit(10)
+        .get()
+        .then((query) => {
+          this.cards = [];
+          query.forEach((doc) => {
+            console.log(doc.id);
+            console.log(doc.data());
+
+            const data = doc.data();
+
+            this.cards.push({
+              id: doc.id,
+              time: data.posted_at,
+              description: data.desc,
+              url: data.url,
+            });
+          });
+        });
+    },
     postNewImage() {
       console.log("OK");
-      const imageUrl = this.newImageUlr;
+      const imageUrl = this.newImageUrl;
       const imageDescription = this.newImageDescription;
 
-      db.collection("posts").add({
-        url: imageUrl,
-        desc: imageDescription,
-        email: store.currentUser,
-      });
+      db.collection("posts")
+        .add({
+          url: imageUrl,
+          desc: imageDescription,
+          email: store.currentUser,
+          posted_at: Date.now(),
+        })
+        .then((doc) => {
+          console.log("Spremljeno ", doc);
+          (this.newImageDescription = ""), (this.newImageUrl = "");
+          this.getPosts();
+        })
+        .catch((e) => {
+          console.error(e);
+        });
     },
   },
   computed: {
